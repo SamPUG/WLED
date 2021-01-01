@@ -540,7 +540,9 @@ uint32_t WS2812FX::getPixelColor(uint16_t i)
   i = realPixelIndex(i);
   
   #ifdef WLED_CUSTOM_LED_MAPPING
-  if (i < customMappingSize) i = customMappingTable[i];
+      if (indexSet < customMappingSize) indexSet = customMappingTable[indexSet];
+  #elif defined WLED_CUSTOM_LED_MAPPING_FUNC
+      i = ledRemapFunc(i);
   #endif
 
   if (_skipFirstMode) i += LED_SKIP_AMOUNT;
