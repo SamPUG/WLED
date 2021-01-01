@@ -125,6 +125,7 @@ void handleOverlayDraw() {
   switch (overlayCurrent)
   {
     case 1: _overlayAnalogClock(); break;
+    case 2: _overlayMatrixClock(); break;
     case 3: _drawOverlayCronixie(); break;
   }
 }
@@ -374,3 +375,169 @@ void setCronixie() {}
 void _overlayCronixie() {}
 void _drawOverlayCronixie() {}
 #endif
+
+/*
+ * Support for matrix clock
+ */
+
+void drawMatrixNumber(uint8_t x_offset, uint8_t num){
+  switch(num){
+    case(0):
+      drawMatrixNumber(x_offset, 8);
+      strip.setPixelColor(strip.matrixXYToIndex(x_offset+1, 2), 0);
+    break;
+    case(1):
+      for(uint8_t y=1; y<4; y++){
+        strip.setPixelColor(strip.matrixXYToIndex(x_offset, y), 0);
+        strip.setPixelColor(strip.matrixXYToIndex(x_offset+2, y), 0);
+      }
+      strip.setPixelColor(strip.matrixXYToIndex(x_offset+2, 4), 0);
+    break;     
+    case(2):
+      drawMatrixNumber(x_offset, 8);
+      strip.setPixelColor(strip.matrixXYToIndex(x_offset, 3), 0);
+      strip.setPixelColor(strip.matrixXYToIndex(x_offset+2, 1), 0);
+    break;
+    case(3):
+      drawMatrixNumber(x_offset, 8);
+      strip.setPixelColor(strip.matrixXYToIndex(x_offset, 1), 0);
+      strip.setPixelColor(strip.matrixXYToIndex(x_offset, 3), 0);
+    break;
+    case(4):
+      drawMatrixNumber(x_offset, 8);
+      strip.setPixelColor(strip.matrixXYToIndex(x_offset+1, 4), 0);
+      strip.setPixelColor(strip.matrixXYToIndex(x_offset+1, 0), 0);
+      strip.setPixelColor(strip.matrixXYToIndex(x_offset, 0), 0);
+      strip.setPixelColor(strip.matrixXYToIndex(x_offset, 1), 0);
+    break;
+    case(5):
+      drawMatrixNumber(x_offset, 6);
+      strip.setPixelColor(strip.matrixXYToIndex(x_offset, 1), 0);
+    break;
+    case(6):
+      drawMatrixNumber(x_offset, 8);
+      strip.setPixelColor(strip.matrixXYToIndex(x_offset+2, 3), 0);
+    break;
+    case(7):
+      drawMatrixNumber(x_offset, 3);
+      strip.setPixelColor(strip.matrixXYToIndex(x_offset, 0), 0);
+      strip.setPixelColor(strip.matrixXYToIndex(x_offset+1, 0), 0);
+      strip.setPixelColor(strip.matrixXYToIndex(x_offset, 2), 0);
+      strip.setPixelColor(strip.matrixXYToIndex(x_offset+1, 2), 0);
+    break;
+    case(8):
+      strip.setPixelColor(strip.matrixXYToIndex(x_offset+1, 1), 0);
+      strip.setPixelColor(strip.matrixXYToIndex(x_offset+1, 3), 0);
+    break;
+    case(9):
+      drawMatrixNumber(x_offset, 8);
+      strip.setPixelColor(strip.matrixXYToIndex(x_offset, 1), 0);
+    break;
+  }
+}
+
+void overlayMatrixNums(uint8_t val1, uint8_t val2, uint8_t val3, uint8_t val4){
+  bool matrixColonShow = false;
+  
+  if((millis() & 512) > 500) matrixColonShow = true;
+
+  drawMatrixNumber(0, val1);
+  drawMatrixNumber(4, val2);
+  drawMatrixNumber(10, val3);
+  drawMatrixNumber(14, val4);
+  
+  if(matrixColonShow){
+    strip.setPixelColor(strip.matrixXYToIndex(8, 0), 0);
+    strip.setPixelColor(strip.matrixXYToIndex(8, 2), 0);
+    strip.setPixelColor(strip.matrixXYToIndex(8, 4), 0);
+  }
+  for(uint8_t y = 0; y < strip.matrixHeight; y++){
+    strip.setPixelColor(strip.matrixXYToIndex(3, y), 0);
+    strip.setPixelColor(strip.matrixXYToIndex(7, y), 0);
+    if(!matrixColonShow) strip.setPixelColor(strip.matrixXYToIndex(8, y), 0);
+    strip.setPixelColor(strip.matrixXYToIndex(9, y), 0);
+    strip.setPixelColor(strip.matrixXYToIndex(13, y), 0);
+    }
+}
+
+void matrixClockCountdown(){
+  // DEBUG_PRINT("Countdown time: ");
+ // DEBUG_PRINTLN(countdownTime);
+
+  if (now() < countdownTime)
+  {
+    uint32_t diff = countdownTime - now();
+    if (diff >= 31536000L) //display in years if more than 365 days
+    {
+      uint32_t years = diff/31536000L;
+      
+      drawMatrixNumber(1, years/100);
+      drawMatrixNumber(5, (years%100)/10);
+      drawMatrixNumber(9, (years%100)%10);
+      strip.setPixelColumnColor(0, 0);
+      strip.setPixelColumnColor(4, 0);
+      strip.setPixelColumnColor(8, 0);
+      strip.setPixelColumnColor(12, 0);
+      
+      // Draw y
+      strip.setPixelColor(strip.matrixXYToIndex(13, 0), 0);
+      strip.setPixelColor(strip.matrixXYToIndex(13, 1), 0);
+      strip.setPixelColor(strip.matrixXYToIndex(13, 4), 0);
+      strip.setPixelColor(strip.matrixXYToIndex(14, 2), 0);
+      strip.setPixelColor(strip.matrixXYToIndex(14, 3), 0);
+      strip.setPixelColor(strip.matrixXYToIndex(14, 4), 0);
+      strip.setPixelColor(strip.matrixXYToIndex(15, 0), 0);
+      strip.setPixelColor(strip.matrixXYToIndex(15, 1), 0);
+      strip.setPixelColor(strip.matrixXYToIndex(15, 4), 0);
+      strip.setPixelColumnColor(16, 0);
+      
+    } else if (diff >= 86400) //display in days if more than 24 hours
+    {
+      uint32_t days = diff/86400;
+      drawMatrixNumber(1, days/100);
+      drawMatrixNumber(5, (days%100)/10);
+      drawMatrixNumber(9, (days%100)%10);
+      strip.setPixelColumnColor(0, 0);
+      strip.setPixelColumnColor(4, 0);
+      strip.setPixelColumnColor(8, 0);
+      strip.setPixelColumnColor(12, 0);
+    
+      // Draw D
+      strip.setPixelColor(strip.matrixXYToIndex(13, 4), 0);
+      strip.setPixelColor(strip.matrixXYToIndex(14, 1), 0);
+      strip.setPixelColor(strip.matrixXYToIndex(14, 2), 0);
+      strip.setPixelColor(strip.matrixXYToIndex(14, 4), 0);
+      strip.setPixelColor(strip.matrixXYToIndex(15, 0), 0);
+      strip.setPixelColor(strip.matrixXYToIndex(15, 3), 0);
+      strip.setPixelColor(strip.matrixXYToIndex(15, 4), 0);   
+
+      strip.setPixelColumnColor(16, 0);   
+    } 
+    else if(diff >= 3600){  // Display in hours and minutes
+      uint16_t hours = diff/3600;
+      uint16_t minutes = (diff - hours*3600)/60;
+      overlayMatrixNums(hours/10, hours%10, minutes/10, minutes%10);
+    }
+    else{  // Minutes and seconds
+      uint16_t minutes = diff/60;
+      uint16_t seconds = diff - minutes*60;
+
+      overlayMatrixNums(minutes/10, minutes%10, seconds/10, seconds%10);
+    }
+  }
+  else overlayMatrixNums(0, 0, 0, 0);
+}
+
+void _overlayMatrixClock(){
+  if(!countdownMode){
+    byte h = hour(localTime);
+    byte m = minute(localTime);
+    if (useAMPM){
+      if (h>12) h-=12;
+      else if (h==0) h+=12;
+    }
+
+    overlayMatrixNums(h/10, h%10, m/10, m%10);
+  } 
+  else matrixClockCountdown();
+}

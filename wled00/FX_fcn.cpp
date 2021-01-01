@@ -30,6 +30,10 @@
 //enable custom per-LED mapping. This can allow for better effects on matrices or special displays
 //#define WLED_CUSTOM_LED_MAPPING
 
+#define WLED_CUSTOM_LED_MAPPING_FUNC
+
+
+
 #ifdef WLED_CUSTOM_LED_MAPPING
 //this is just an example (30 LEDs). It will first set all even, then all uneven LEDs.
 const uint16_t customMappingTable[] = {
@@ -43,6 +47,27 @@ const uint16_t customMappingTable[] = {
 
 const uint16_t customMappingSize = sizeof(customMappingTable)/sizeof(uint16_t); //30 in example
 #endif
+
+#ifdef WLED_CUSTOM_LED_MAPPING_FUNC
+uint16_t WS2812FX::ledRemapFunc(uint16_t index){
+  
+  matrix_pos pos = getMatrixPosFromIndex(index);
+  index = pos.y * matrixWidth;
+  if(pos.y % 2){
+    index += (matrixWidth - 1) - pos.x;
+  }
+  else{
+    index += pos.x;
+  }
+
+  return index;
+}
+#else
+uint8_t WS2812FX::ledRemapFunc(uint8_t index){
+  return index;
+}
+#endif
+
 
 #ifndef PWM_INDEX
 #define PWM_INDEX 0
@@ -188,6 +213,8 @@ void WS2812FX::setPixelColor(uint16_t i, byte r, byte g, byte b, byte w)
       if (reverseMode) indexSetRev = REV(indexSet);
       #ifdef WLED_CUSTOM_LED_MAPPING
       if (indexSet < customMappingSize) indexSet = customMappingTable[indexSet];
+      #elif defined WLED_CUSTOM_LED_MAPPING_FUNC
+        indexSet = ledRemapFunc(indexSet);
       #endif
       if (indexSetRev >= SEGMENT.start && indexSetRev < SEGMENT.stop) {
         bus->SetPixelColor(indexSet + skip, col);
@@ -204,6 +231,8 @@ void WS2812FX::setPixelColor(uint16_t i, byte r, byte g, byte b, byte w)
     if (reverseMode) i = REV(i);
     #ifdef WLED_CUSTOM_LED_MAPPING
     if (i < customMappingSize) i = customMappingTable[i];
+    #elif defined WLED_CUSTOM_LED_MAPPING_FUNC
+        i = ledRemapFunc(i);
     #endif
     bus->SetPixelColor(i + skip, col);
   }
@@ -212,6 +241,41 @@ void WS2812FX::setPixelColor(uint16_t i, byte r, byte g, byte b, byte w)
       bus->SetPixelColor(j, RgbwColor(0, 0, 0, 0));
     }
   }
+}
+
+void WS2812FX::setPixelColumnColor(uint16_t n, uint32_t c, uint8_t start_height, uint8_t end_height){
+  if(end_height == 0) end_height = matrixHeight-1;
+  
+  for(uint8_t y=start_height; y<=end_height; y++){
+    setPixelColor(matrixXYToIndex(n, y), c);
+  }
+}
+
+uint16_t WS2812FX::matrixXYToIndex(uint8_t x, uint8_t y){
+  uint16_t index = 0; 
+
+  index += matrixHeight*x;
+
+  if(x%2){
+    index += (matrixHeight - 1) - y;
+  }
+  else index += y;
+
+  return index;
+}
+
+WS2812FX::matrix_pos WS2812FX::getMatrixPosFromIndex(uint16_t index){
+  matrix_pos pos;
+  pos.x = index / matrixHeight;
+
+  pos.y = 0;
+  if(pos.x%2){
+    pos.y = matrixHeight - (index - pos.x*matrixHeight) - 1; 
+  }
+  else{
+    pos.y = index - pos.x*matrixHeight;
+  }
+  return pos;
 }
 
 
