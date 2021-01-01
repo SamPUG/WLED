@@ -231,6 +231,19 @@ void getTimeString(char* out)
 void setCountdown()
 {
   if (currentTimezone != tzCurrent) updateTimezone();
+  DEBUG_PRINT("Countdown set: ");
+  DEBUG_PRINT(countdownHour);
+  DEBUG_PRINT(", ");
+  DEBUG_PRINT(countdownMin);
+  DEBUG_PRINT(", ");
+  DEBUG_PRINT(countdownSec);
+  DEBUG_PRINT(", ");
+  DEBUG_PRINT(countdownDay);
+  DEBUG_PRINT(", ");
+  DEBUG_PRINT(countdownMonth);
+  DEBUG_PRINT(", ");
+  DEBUG_PRINTLN(countdownYear);
+
   countdownTime = tz->toUTC(getUnixTime(countdownHour, countdownMin, countdownSec, countdownDay, countdownMonth, countdownYear));
   if (countdownTime - now() > 0) countdownOverTriggered = false;
 }

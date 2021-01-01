@@ -499,6 +499,7 @@ class WS2812FX {
       trigger(void),
       setSegment(uint8_t n, uint16_t start, uint16_t stop, uint8_t grouping = 0, uint8_t spacing = 0),
       resetSegments(),
+      setPixelColumnColor(uint16_t n, uint32_t c, uint8_t startHeight = 0, uint8_t endHeight = 0),
       setPixelColor(uint16_t n, uint32_t c),
       setPixelColor(uint16_t n, uint8_t r, uint8_t g, uint8_t b, uint8_t w = 0),
       show(void),
@@ -522,6 +523,9 @@ class WS2812FX {
       paletteFade = 0,
       paletteBlend = 0,
       milliampsPerLed = 55,
+      matrixHeight = 5, 
+      matrixWidth = 17,
+
       getBrightness(void),
       getMode(void),
       getSpeed(void),
@@ -541,7 +545,8 @@ class WS2812FX {
     uint16_t
       ablMilliampsMax,
       currentMilliamps,
-      triwave16(uint16_t);
+      triwave16(uint16_t),
+      matrixXYToIndex(uint8_t x, uint8_t y);
 
     uint32_t
       now,
@@ -698,6 +703,7 @@ class WS2812FX {
     uint8_t _brightness;
     static uint16_t _usedSegmentData;
 
+
     void load_gradient_palette(uint8_t);
     void handle_palette(void);
 
@@ -746,7 +752,13 @@ class WS2812FX {
     RgbwColor _analogLastColor = 0;
     uint8_t _analogLastBri = 0;
     #endif
-    
+
+    struct matrix_pos {uint8_t x; uint8_t y;};
+
+    matrix_pos getMatrixPosFromIndex(uint16_t index);
+
+    uint16_t ledRemapFunc(uint16_t index);
+
     uint8_t _segment_index = 0;
     uint8_t _segment_index_palette_last = 99;
     segment _segments[MAX_NUM_SEGMENTS] = { // SRAM footprint: 24 bytes per element
